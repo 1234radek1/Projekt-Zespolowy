@@ -1,0 +1,47 @@
+services:
+  # Konfiguracja bazy danych PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: raport_db
+    restart: always
+    environment:
+      POSTGRES_DB: PdfReportsDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: SecretPassword123!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Konfiguracja Backendu w .NET 8
+  backend:
+    build:
+      context: ./RaportApp
+      dockerfile: Dockerfile
+    container_name: raport_backend
+    restart: always
+    environment:
+      # Nadpisuje konfigurację z appsettings.json
+      # Wskazujemy Host=db (nazwa serwisu z linijki wyżej)
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=PdfReportsDb;Username=postgres;Password=SecretPassword123!
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  # Konfiguracja Frontendu w React/Vite i Nginx
+  frontend:
+    build:
+      context: ./raport-frontend
+      dockerfile: Dockerfile
+    container_name: raport_frontend
+    restart: always
+    ports:
+      - "5174:80"  # Przekierowanie portu z 80 (nginx) na 5174 hosta
+    depends_on:
+      - backend
+
+volumes:
+  # Trwały wolumen, dzięki czemu po resecie dockera projekty nadal tam będą
+  postgres_data:
