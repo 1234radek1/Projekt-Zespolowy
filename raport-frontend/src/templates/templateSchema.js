@@ -3,13 +3,13 @@ export function parseTemplate(template) {
 }
 
 export function getTemplateFieldNames(template) {
-  return getTemplateFields(template)
+  return getTemplateFields(template.schemas)
     .map((field) => field.name)
     .filter(Boolean);
 }
 
 export function buildTemplateInput(template, values) {
-  return getTemplateFields(template).reduce((input, field) => {
+  return getTemplateFields(template.schemas).reduce((input, field) => {
     if (!field.name) {
       return input;
     }
@@ -21,13 +21,17 @@ export function buildTemplateInput(template, values) {
   }, {});
 }
 
-function getTemplateFields(template) {
-  return (template.schemas ?? []).flatMap((page) => (
+export function normalizeSchemaPages(schemas = []) {
+  return schemas.map((page) => (
     Array.isArray(page) ? page : Object.values(page)
   ));
 }
 
-function createFieldValue(field, values) {
+export function getTemplateFields(schemas = []) {
+  return normalizeSchemaPages(schemas).flatMap((page) => page);
+}
+
+export function createFieldValue(field, values) {
   const baseContent = field.content ?? '';
   const value = values[field.name];
 

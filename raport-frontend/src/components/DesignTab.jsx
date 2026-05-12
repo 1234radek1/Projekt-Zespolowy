@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Designer } from '@pdfme/ui';
 import { createTemplate } from '../api/reportApi.js';
 import { BLANK_PDF, PDFME_PLUGINS, REPORT_FIELD_NAMES } from '../pdf/pdfmeConfig.js';
+import { normalizeSchemaPages } from '../templates/templateSchema.js';
 
 const DEFAULT_TEMPLATE_NAME = 'Nowy Szablon';
 
@@ -55,6 +56,25 @@ export function DesignTab({ onTemplateSaved }) {
     }
   };
 
+  const addPage = () => {
+    if (!designerRef.current) {
+      return;
+    }
+
+    const template = designerRef.current.getTemplate();
+    const schemas = normalizeSchemaPages(template.schemas);
+    const insertIndex = designerRef.current.getPageCursor() + 1;
+    schemas.splice(insertIndex, 0, []);
+
+    const nextTemplate = {
+      ...template,
+      schemas,
+    };
+
+    designerRef.current.updateTemplate(nextTemplate);
+    setStatus({ type: 'success', message: 'Dodano nową stronę.' });
+  };
+
   return (
     <section className="design-tab">
       <div className="toolbar">
@@ -67,6 +87,10 @@ export function DesignTab({ onTemplateSaved }) {
 
         <button className="button button-primary" type="button" onClick={saveTemplate}>
           Zapisz
+        </button>
+
+        <button className="button button-secondary" type="button" onClick={addPage}>
+          Dodaj stronę
         </button>
 
         {status && <span className={`status status-${status.type}`}>{status.message}</span>}

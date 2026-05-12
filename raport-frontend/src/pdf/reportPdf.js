@@ -1,11 +1,12 @@
 import { generate } from '@pdfme/generator';
 import { PDFME_PLUGINS } from './pdfmeConfig.js';
 import { createReportValues } from '../reports/reportValues.js';
-import { buildTemplateInput } from '../templates/templateSchema.js';
+import { prepareTemplateForGeneration } from '../templates/templatePagination.js';
 
 export async function generateReportPdf({ template, client, extraNotes }) {
-  const input = buildTemplateInput(template, createReportValues(client, extraNotes));
-  const pdf = await generate({ template, inputs: [input], plugins: PDFME_PLUGINS });
+  const values = createReportValues(client, extraNotes);
+  const { template: paginatedTemplate, input } = prepareTemplateForGeneration(template, values);
+  const pdf = await generate({ template: paginatedTemplate, inputs: [input], plugins: PDFME_PLUGINS });
   downloadPdf(pdf, `Raport_${client.name}.pdf`);
 }
 
