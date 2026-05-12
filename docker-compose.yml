@@ -38,7 +38,7 @@ services:
     container_name: raport_frontend
     restart: always
     ports:
-      - "5174:80"  # Przekierowanie portu z 80 (nginx) na 5174 hosta
+      - "5174:80" # Przekierowanie portu z 80 (nginx) na 5174 hosta
     depends_on:
       - backend
 
