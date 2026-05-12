@@ -26,7 +26,66 @@ Tabela `ReportTemplates` przechowująca nazwy i pełne schematy projektów.
 
 ---
 
-# Instrukcja uruchomienia 
+# Instrukcja uruchomienia (Docker Compose)
+
+Projekt został skonfigurowany do łatwego uruchamiania za pomocą Dockera. Nie musisz ręcznie instalować Node.js, .NET SDK ani serwera bazy danych PostgreSQL (wszystko uruchomi się w kontenerach).
+
+## 1. Wymagania systemowe
+
+- Zainstalowany **Docker** oraz **Docker Compose**
+  
+*(Jeżeli nie masz Dockera, pobierz i zainstaluj np. [Docker Desktop](https://www.docker.com/products/docker-desktop).)*
+
+---
+
+## 2. Uruchomienie projektu
+
+1. Otwórz terminal (wiersz poleceń) w głównym katalogu projektu (tam gdzie znajduje się plik `docker-compose.yml`).
+2. Uruchom wszystkie usługi za pomocą polecenia:
+
+```bash
+docker compose up --build -d
+```
+*(Flaga `--build` wymusi zbudowanie obrazów przy pierwszej instalacji. Flaga `-d` uruchomi kontenery w tle).*
+
+Gdy kontenery się uruchomią, automatycznie zostanie postawiona baza danych PostgreSQL, backend API (.NET) oraz frontend aplikacji (React).
+
+---
+
+## 3. Dostęp do aplikacji
+
+Po uruchomieniu kontenerów poszczególne elementy systemu są dostępne pod następującymi adresami:
+
+- **Frontend (Visual Designer)**: 
+  👉 [http://localhost:5174](http://localhost:5174)
+
+- **Backend API**: 
+  👉 http://localhost:5000
+
+- **Baza danych (PostgreSQL)**:
+  - Host: `localhost` (z wewnątrz kontenerów nazywa się `db`)
+  - Port: `5432`
+  - Nazwa bazy: `PdfReportsDb`
+  - Użytkownik: `postgres`
+  - Hasło: `SecretPassword123!`
+
+---
+
+## Zatrzymanie aplikacji
+
+Aby zatrzymać kontenery (bez kasowania danych), użyj polecenia w tym samym folderze:
+
+```bash
+docker compose down
+```
+
+Dane zostają zachowane na stałym wolumenie dockerowym, więc po ponownym uruchomieniu wcześniejsze szablony wciąż tam będą!
+
+---
+
+# Instrukcja uruchomienia lokalnie (bez Dockera)
+
+Jeżeli wolisz uruchomić aplikację tradycyjnie (np. w celach deweloperskich), wykonaj poniższe kroki.
 
 ## 1. Wymagania systemowe
 
@@ -34,84 +93,41 @@ Tabela `ReportTemplates` przechowująca nazwy i pełne schematy projektów.
 - **.NET 8 SDK**
 - **PostgreSQL**
 
----
-
 ## 2. Konfiguracja Bazy Danych
 
 1. Otwórz **pgAdmin 4** (lub inne narzędzie SQL).
-2. Stwórz nową bazę danych o nazwie:
-
-```
-PdfReportsDb
-```
-
-3. Przejdź do pliku:
-
-```
-RaportApp/RaportApp/appsettings.json
-```
-
-4. W sekcji `ConnectionStrings` wpisz swoje hasło do PostgreSQL:
-
+2. Stwórz nową bazę danych o nazwie: `PdfReportsDb`
+3. Przejdź do pliku: `RaportApp/RaportApp/appsettings.json` lub użyj `appsettings.Development.json`
+4. Zmodyfikuj ciąg połączenia (ConnectionString), tak aby wskazywał na Twój lokalny serwer PostgreSQL:
 ```json
-"DefaultConnection": "Host=localhost;Port=5432;Database=PdfReportsDb;Username=postgres;Password=TWOJE_HASLO"
+"ConnectionStrings": {
+  "DefaultConnection": "Host=localhost;Port=5432;Database=PdfReportsDb;Username=postgres;Password=TWOJE_HASLO"
+}
 ```
-
----
 
 ## 3. Uruchomienie Backend-u (.NET)
 
 1. Otwórz rozwiązanie w **Visual Studio** (`.slnx` lub `.sln` w folderze `RaportApp`).
-
-2. Otwórz **Package Manager Console** i wpisz:
-
+2. Otwórz **Package Manager Console** na dole ekranu i wpisz:
 ```powershell
 Update-Database
 ```
+*(Stworzy to niezbędne tabele w Twojej lokalnej bazie danych).*
 
-(To stworzy niezbędne tabele w Twojej bazie danych).
-
-3. Uruchom projekt (`F5`).
-
-API powinno wystartować na porcie:
-
-```
-http://localhost:5000
-```
-
----
+3. Uruchom projekt (`F5`). API wystartuje na porcie `http://localhost:5000`.
 
 ## 4. Uruchomienie Frontendu (React)
 
-1. Otwórz terminal w folderze:
-
-```
-raport-frontend
-```
-
-2. Zainstaluj biblioteki:
-
+1. Otwórz terminal wewnątrz folderu `raport-frontend`.
+2. Zainstaluj niezbędne biblioteki NPM:
 ```bash
 npm install
 ```
-
-3. Uruchom aplikację:
-
+3. Uruchom tryb deweloperski aplikacji:
 ```bash
 npm run dev
 ```
-
-4. Otwórz adres wskazany w terminalu (prawdopodobnie):
-
-```
-http://localhost:5173
-```
-
-lub
-
-```
-http://localhost:5174
-```
+4. Aplikacja powinna być dostępna w przeglądarce pod adresem: `http://localhost:5174` (lub `http://localhost:5173` - sprawdź adres sugerowany przez terminal).
 
 ---
 

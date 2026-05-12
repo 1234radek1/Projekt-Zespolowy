@@ -1,40 +1,62 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RaportApp.Contracts;
 using RaportApp.Data;
 using RaportApp.Models;
 
-namespace RaportApp.Controllers
+namespace RaportApp.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class TemplatesController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")] // Adres to będzie: https://localhost:XXXX/api/templates
-    public class TemplatesController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public TemplatesController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public TemplatesController(AppDbContext context)
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ReportTemplate>>> GetTemplates()
+    {
+        var templates = await _context.ReportTemplates
+            .AsNoTracking()
+            .OrderByDescending(template => template.CreatedAt)
+            .ToListAsync();
+
+        return Ok(templates);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<ReportTemplate>> GetTemplate(Guid id)
+    {
+        var template = await _context.ReportTemplates
+            .AsNoTracking()
+            .FirstOrDefaultAsync(template => template.Id == id);
+
+        return template is null ? NotFound() : Ok(template);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ReportTemplate>> CreateTemplate(CreateReportTemplateRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
         {
-            _context = context;
+            return BadRequest("Template name is required.");
         }
 
-        // 1. Pobieranie wszystkich szablonów z bazy
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ReportTemplate>>> GetTemplates()
+        var template = new ReportTemplate
         {
-            return await _context.ReportTemplates.ToListAsync();
-        }
+            Id = Guid.NewGuid(),
+            Name = request.Name.Trim(),
+            SchemaContent = request.SchemaContent,
+            CreatedAt = DateTime.UtcNow,
+        };
 
-        // 2. Zapisywanie nowego szablonu
-        [HttpPost]
-        public async Task<ActionResult<ReportTemplate>> SaveTemplate(ReportTemplate template)
-        {
-            // Nadajemy nowe ID
-            template.Id = Guid.NewGuid();
-            template.CreatedAt = DateTime.UtcNow;
+        _context.ReportTemplates.Add(template);
+        await _context.SaveChangesAsync();
 
-            _context.ReportTemplates.Add(template);
-            await _context.SaveChangesAsync();
-
-            return Ok(template);
-        }
+        return CreatedAtAction(nameof(GetTemplate), new { id = template.Id }, template);
     }
 }
