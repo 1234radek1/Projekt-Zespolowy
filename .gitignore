@@ -1,0 +1,16 @@
+# Visual Studio śmieci
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.sln.docstates
+
+# React śmieci
+node_modules/
+dist/
+.env
+.DS_Store
+
+# Inne
+.idea/
